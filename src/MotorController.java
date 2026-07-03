@@ -1,13 +1,27 @@
-
+/**
+ * Shared hardware resource interface representing the robotic arm motor registers.
+ * Acts as the baseline configuration to demonstrate basic mutual exclusion 
+ * and unmanaged priority inversion.
+ */
 public class MotorController {
-    // The synchronized keyword ensures only one thread can access this at a time (Task 2)
-    public synchronized void accessResource(String threadName, int holdTimeMs) {
-        System.out.println("[" + System.currentTimeMillis() + "] " + threadName + " ACQUIRED MotorController.");
+
+    // The 'synchronized' modifier enforces a binary monitor lock on this method.
+    // It guarantees mutual exclusion, meaning only one thread can execute inside 
+    // this critical section at any given moment to prevent data race conditions.
+    public synchronized void accessResource(String taskName, int workTime) {
+
+        System.out.println("[" + System.currentTimeMillis() + "] "
+                + taskName + " ACQUIRED MotorController.");
+
         try {
-            Thread.sleep(holdTimeMs);
+            // Emulate the hardware operational window by suspending the thread
+            // inside the critical section for the specified execution duration.
+            Thread.sleep(workTime);
         } catch (InterruptedException e) {
-            System.out.println(threadName + " was interrupted.");
+            e.printStackTrace();
         }
-        System.out.println("[" + System.currentTimeMillis() + "] " + threadName + " RELEASED MotorController.");
+
+        System.out.println("[" + System.currentTimeMillis() + "] "
+                + taskName + " RELEASED MotorController.");
     }
 }
