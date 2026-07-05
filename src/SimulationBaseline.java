@@ -16,7 +16,7 @@ public class SimulationBaseline {
                 new ArmTask("Logger (Low)", TaskType.LOGGER, controller, 3000, true));
 
         Thread motion = new Thread(
-                new ArmTask("Motion Planner (Med)", TaskType.MOTION_PLANNER, controller, 2000, false));
+                new ArmTask("Motion Planner (Med)", TaskType.MOTION_PLANNER, controller, 2000, true));
 
         Thread safety = new Thread(
                 new ArmTask("Safety Monitor (High)", TaskType.SAFETY_MONITOR, controller, 1000, true));

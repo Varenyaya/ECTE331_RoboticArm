@@ -26,7 +26,7 @@ public class SimulationCeiling {
                     new ArmTaskCeiling("Logger (Low)", TaskType.LOGGER, resource, 3000, true));
 
             Thread motion = new Thread(
-                    new ArmTaskCeiling("Motion Planner (Med)", TaskType.MOTION_PLANNER, resource, 2000, false));
+                    new ArmTaskCeiling("Motion Planner (Med)", TaskType.MOTION_PLANNER, resource, 2000, true));
 
             Thread safety = new Thread(
                     new ArmTaskCeiling("Safety Monitor (High)", TaskType.SAFETY_MONITOR, resource, 1000, true));

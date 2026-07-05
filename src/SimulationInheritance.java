@@ -26,7 +26,7 @@ public class SimulationInheritance {
                     new ArmTaskInheritance("Logger (Low)", TaskType.LOGGER, resource, 3000, true));
 
             Thread motion = new Thread(
-                    new ArmTaskInheritance("Motion Planner (Med)", TaskType.MOTION_PLANNER, resource, 2000, false));
+                    new ArmTaskInheritance("Motion Planner (Med)", TaskType.MOTION_PLANNER, resource, 2000, true));
 
             Thread safety = new Thread(
                     new ArmTaskInheritance("Safety Monitor (High)", TaskType.SAFETY_MONITOR, resource, 1000, true));
