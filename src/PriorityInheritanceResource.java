@@ -46,7 +46,6 @@ public class PriorityInheritanceResource {
                 }
 
                 // Dynamic Boost: Raise lock owner to the higher competing task's priority level.
-                // This prevents middle-priority tasks from preempting it on the core.
                 System.out.println(
                         ">>> PRIORITY INHERITANCE: "
                                 + owner.getName()

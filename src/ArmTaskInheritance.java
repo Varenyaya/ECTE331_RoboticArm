@@ -38,8 +38,9 @@ public class ArmTaskInheritance implements Runnable {
             resource.lock(type);
 
             try {
-                // Simulate holding and using the shared resource for the specified duration.
-                Thread.sleep(workTime);
+                // Incorporate dynamic operational jitter (±100ms) to simulate structural hardware latency variance.
+                int jitter = (int)(Math.random() * 200 - 100);
+                Thread.sleep(Math.max(0, workTime + jitter));
             } catch (InterruptedException e) {
                 e.printStackTrace();
             } finally {
@@ -49,13 +50,19 @@ public class ArmTaskInheritance implements Runnable {
 
         } else {
             // Simulates independent calculations (like path-finding) outside the critical resource.
-            // Uses an active calculation loop to ensure the thread keeps running on the CPU core
-            // instead of dropping out early and giving up its time slice.
+            // Employs a hybrid spinning loop to accurately reflect real operating system background preemption.
             long start = System.currentTimeMillis();
+            int spin = 0;
 
             while (System.currentTimeMillis() - start < workTime) {
-                // Active loop processing - burning clock cycles to simulate computation time.
+                spin++;
+                // Periodically yield execution control slices to match baseline preemption jitter
+                if (spin % 10000 == 0) {
+                    Thread.yield();
+                }
             }
+            
+            System.out.println("[" + System.currentTimeMillis() + "] " + name + " completed independent work.");
         }
 
         System.out.println("[" + System.currentTimeMillis() + "] " + name + " FINISHED");

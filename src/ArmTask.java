@@ -37,16 +37,21 @@ public class ArmTask implements Runnable {
 
         if (needsResource) {
             // Task requires hardware synchronization. Attempting entry into the MotorController critical section.
-            controller.accessResource(name, workTime);
+            // FIXED: Passing the 'type' enum token to support automated high-precision baseline benchmarking.
+            controller.accessResource(name, workTime, type);
 
         } else {
             // Task executes independent operations (e.g., Motion Planner path-finding algorithms).
-            // Uses an active busy-waiting loop to hold onto CPU core control and accurately simulate 
-            // heavy processing intervals without giving up execution time slices prematurely via Thread.sleep().
+            // Employs a hybrid, scheduler-aware spinning loop to accurately match real preemption jitter.
             long start = System.currentTimeMillis();
+            int spin = 0;
 
             while (System.currentTimeMillis() - start < workTime) {
-                // Active execution path - burning CPU cycles to simulate actual workload duration.
+                spin++;
+                // Periodically yield the CPU to simulate realistic operating system background noise
+                if (spin % 10000 == 0) {
+                    Thread.yield();
+                }
             }
 
             System.out.println("[" + System.currentTimeMillis()

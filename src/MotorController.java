@@ -5,23 +5,31 @@
  */
 public class MotorController {
 
-    // The 'synchronized' modifier enforces a binary monitor lock on this method.
-    // It guarantees mutual exclusion, meaning only one thread can execute inside 
-    // this critical section at any given moment to prevent data race conditions.
-    public synchronized void accessResource(String taskName, int workTime) {
+    // Enforces a binary monitor lock. Tracks timestamps relative to the external trigger bounds.
+    public synchronized void accessResource(String taskName, int workTime, TaskType type) {
+        
+        // Record the actual acquisition timestamp the moment the thread clears the synchronization pool
+        if (type == TaskType.SAFETY_MONITOR) {
+            SimulationBaseline.getMetrics().recordAcquire();
+        }
 
         System.out.println("[" + System.currentTimeMillis() + "] "
                 + taskName + " ACQUIRED MotorController.");
 
         try {
-            // Emulate the hardware operational window by suspending the thread
-            // inside the critical section for the specified execution duration.
-            Thread.sleep(workTime);
+            // Inject dynamic operational jitter (±100ms) to simulate structural hardware variance
+            int jitter = (int)(Math.random() * 200 - 100);
+            Thread.sleep(Math.max(0, workTime + jitter));
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
 
         System.out.println("[" + System.currentTimeMillis() + "] "
                 + taskName + " RELEASED MotorController.");
+
+        // Record the final completion timestamp when the safety task exits the critical block completely
+        if (type == TaskType.SAFETY_MONITOR) {
+            SimulationBaseline.getMetrics().recordFinish();
+        }
     }
 }

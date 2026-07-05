@@ -1,40 +1,42 @@
 /**
  * Tracks and calculates real-time performance data for task execution.
- * Captures request, acquisition, and completion timestamps to calculate 
- * pure thread waiting latencies and total response intervals.
+ * Captures high-precision nanosecond timestamps to evaluate pure thread 
+ * waiting latencies and total response intervals with engineering-grade precision.
  */
 public class Metrics {
-
     private long requestTime;
     private long acquireTime;
     private long finishTime;
 
-    // Captures the exact moment a task attempts to request the shared resource lock.
     public void recordRequest() {
-        requestTime = System.currentTimeMillis();
+        this.requestTime = System.nanoTime();
     }
 
-    // Captures the exact moment the task successfully bypasses the monitor queue 
-    // and secures exclusive lock control over the resource.
     public void recordAcquire() {
-        acquireTime = System.currentTimeMillis();
+        this.acquireTime = System.nanoTime();
     }
 
-    // Captures the final timestamp when the task completes its operation 
-    // and officially yields the resource lock back to the system pool.
     public void recordFinish() {
-        finishTime = System.currentTimeMillis();
+        this.finishTime = System.nanoTime();
     }
 
-    // Calculates the pure time spent blocked in the queue.
-    // Measures the delay between requesting the resource and actually acquiring it.
-    public long getWaitingTime() {
-        return acquireTime - requestTime;
+    /**
+     * Calculates pure resource contention delay in milliseconds.
+     * Evaluates the delta between the initial request point and the final acquisition frame.
+     *
+     * @return pure waiting time in milliseconds with decimal precision.
+     */
+    public double getWaitingTime() {
+        return (acquireTime - requestTime) / 1000000.0;
     }
 
-    // Calculates the total turnaround time for the critical operation.
-    // Tracks the end-to-end window from the initial lock request to final execution finish.
-    public long getResponseTime() {
-        return finishTime - requestTime;
+    /**
+     * Calculates total operation turnaround frame metrics in milliseconds.
+     * Evaluates the complete lifespan from initial execution request to final lock release.
+     *
+     * @return total response time in milliseconds with decimal precision.
+     */
+    public double getResponseTime() {
+        return (finishTime - requestTime) / 1000000.0;
     }
 }

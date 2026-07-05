@@ -48,7 +48,6 @@ public class PriorityCeilingResource {
         originalPriorities.put(current, current.getPriority());
 
         // Proactive Step: Immediately push the thread to priority 10.
-        // This ensures a low task cannot be preempted by a medium task while holding the lock.
         System.out.println(
                 ">>> PRIORITY CEILING APPLIED: "
                         + current.getName()

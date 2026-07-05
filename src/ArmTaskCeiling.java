@@ -38,8 +38,9 @@ public class ArmTaskCeiling implements Runnable {
             resource.lock(type);
 
             try {
-                // Safely simulate the duration of hardware resource usage once the ceiling is applied.
-                Thread.sleep(workTime);
+                // Incorporate dynamic operational jitter (±100ms) to simulate structural hardware latency variance.
+                int jitter = (int)(Math.random() * 200 - 100);
+                Thread.sleep(Math.max(0, workTime + jitter));
             } catch (InterruptedException e) {
                 e.printStackTrace();
             } finally {
@@ -49,13 +50,19 @@ public class ArmTaskCeiling implements Runnable {
 
         } else {
             // Simulates localized task operations independent of the critical resource.
-            // Uses a busy-waiting computation loop to ensure the thread actively claims its 
-            // scheduler priority and core allocation without involuntarily yielding.
+            // Employs a hybrid spinning loop to accurately reflect real operating system background preemption.
             long start = System.currentTimeMillis();
+            int spin = 0;
 
             while (System.currentTimeMillis() - start < workTime) {
-                // Simulate intensive processing workload duration by consuming CPU cycles.
+                spin++;
+                // Periodically yield execution control slices to match baseline preemption jitter
+                if (spin % 10000 == 0) {
+                    Thread.yield();
+                }
             }
+            
+            System.out.println("[" + System.currentTimeMillis() + "] " + name + " completed independent work.");
         }
 
         System.out.println("[" + System.currentTimeMillis() + "] " + name + " FINISHED");

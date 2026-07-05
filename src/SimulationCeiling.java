@@ -1,52 +1,42 @@
 /**
  * Test harness for evaluating the Priority Ceiling Protocol (Task 5 & 6).
- * Executes 10 sequential iterations of the simulation configuration to eliminate 
- * random operating system scheduling noise and calculate stable performance averages.
+ * Executes 10 sequential iterations under identical background preemption stress.
  */
 public class SimulationCeiling {
 
-    // Number of experimental loops required for compiling statistical averages
     private static final int RUNS = 10;
+    private static double totalWaiting = 0;
+    private static double totalResponse = 0;
 
     public static void main(String[] args) {
-
-        long totalWaiting = 0;
-        long totalResponse = 0;
-
         System.out.println("\n--- PRIORITY CEILING EXPERIMENT ---\n");
 
-        // Loop harness to gather multiple data points for the evaluation report
         for (int i = 0; i < RUNS; i++) {
+            startBackgroundNoise();
 
-            // Create a fresh instance of the protocol monitor for this test iteration
             PriorityCeilingResource resource = new PriorityCeilingResource();
 
-            // Instantiate tasks matching the core embedded application specifications
             Thread logger = new Thread(
                     new ArmTaskCeiling("Logger (Low)", TaskType.LOGGER, resource, 3000, true));
 
             Thread motion = new Thread(
-                    new ArmTaskCeiling("Motion Planner (Med)", TaskType.MOTION_PLANNER, resource, 2000, true));
+                    new ArmTaskCeiling("Motion Planner (Med)", TaskType.MOTION_PLANNER, resource, 2000, false));
 
             Thread safety = new Thread(
                     new ArmTaskCeiling("Safety Monitor (High)", TaskType.SAFETY_MONITOR, resource, 1000, true));
 
-            // Enforce system priority assignments (1, 5, and 10)
             logger.setPriority(Thread.MIN_PRIORITY);
             motion.setPriority(Thread.NORM_PRIORITY);
             safety.setPriority(Thread.MAX_PRIORITY);
 
-            // Stagger task execution paths using the defined milestone intervals
             logger.start();
-            sleep(200); // Allow Low to secure the resource and immediately scale to ceiling priority
+            sleep(500); 
             
             safety.start();
-            sleep(200); // Stagger interval before activating independent workload
-            
-            motion.start(); // Medium begins but cannot interfere due to active ceiling protection
+            sleep(100);
+            motion.start();
 
             try {
-                // Suspend loop execution until current thread run completes entirely
                 logger.join();
                 safety.join();
                 motion.join();
@@ -54,36 +44,46 @@ public class SimulationCeiling {
                 e.printStackTrace();
             }
 
-            // Extract high-precision temporal metrics recorded inside the resource monitor
             Metrics m = resource.getMetrics();
+            double wait = m.getWaitingTime();
+            double response = m.getResponseTime();
 
-            long wait = m.getWaitingTime();
-            long response = m.getResponseTime();
-
-            // Accumulate metrics for computing systemic mean values
             totalWaiting += wait;
             totalResponse += response;
 
-            System.out.println("Run " + (i + 1) +
-                    " | Waiting: " + wait +
-                    " ms | Response: " + response + " ms");
+            System.out.printf("Ceiling Run %d | Waiting: %.2f ms | Response: %.2f ms%n", (i + 1), wait, response);
         }
 
-        // Output finalized mathematical averages for the performance data section
         System.out.println("\n===== CEILING AVERAGES =====");
-        System.out.println("Avg Waiting Time: " + (totalWaiting / RUNS) + " ms");
-        System.out.println("Avg Response Time: " + (totalResponse / RUNS) + " ms");
+        System.out.printf("Avg Waiting Time: %.2f ms%n", (totalWaiting / RUNS));
+        System.out.printf("Avg Response Time: %.2f ms%n", (totalResponse / RUNS));
     }
 
-    /**
-     * Staging utility function used to precisely sequence the initial arrival times 
-     * of the task threads.
-     */
+    public static double getAvgWaiting() {
+        return totalWaiting / RUNS;
+    }
+
+    public static double getAvgResponse() {
+        return totalResponse / RUNS;
+    }
+
     private static void sleep(long ms) {
         try {
             Thread.sleep(ms);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
+    }
+
+    private static void startBackgroundNoise() {
+        Thread noise = new Thread(() -> {
+            long start = System.currentTimeMillis();
+            while (System.currentTimeMillis() - start < 7000) {
+                double volatileVar = Math.sin(Math.random()) * Math.cos(Math.random());
+            }
+        });
+        noise.setPriority(Thread.NORM_PRIORITY); 
+        noise.setDaemon(true);
+        noise.start();
     }
 }
